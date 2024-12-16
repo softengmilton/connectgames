@@ -253,8 +253,8 @@
         }
 
     function playerMove(col) {
-        if (!isPlayerTurn || !isValidMove(col)) return; 
-        isPlayerTurn = false;
+        if (!isPlayerTurn || !isValidMove(col)) return;
+        isPlayerTurn = false; 
         const row = makeMove(col, You);
         updateCell(row, col);
 
@@ -271,8 +271,11 @@
             return;
         }
 
-        setTimeout(aiMove, 500);
+        setTimeout(() => {
+            aiMove();
+        }, 500); // Allow AI to make its move after a delay
     }
+
 
     function aiMove() {
         const col = findBestMove();
