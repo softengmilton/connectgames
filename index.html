@@ -16,6 +16,7 @@
             margin: 0;
             height: 100vh;
             justify-content: center;
+            overflow: hidden;
         }
 
         h1 {
@@ -97,15 +98,53 @@
         button:hover {
             background: #0056b3;
         }
+
+        /* Fireworks styling */
+        .fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: transparent;
+            border-radius: 50%;
+            animation: explode 1.5s ease-out infinite;
+        }
+
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(2.5);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(4);
+            }
+        }
     </style>
 </head>
 
 <body>
-
     <h1>Connect Four</h1>
     <p id="game-message"></p>
     <table id="board"></table>
     <button id="reset-button" style="display:none;">Play Again</button>
+
+    <div class="fireworks" id="fireworks-container"></div>
 
     <script>
         const Rows = 6;
@@ -118,6 +157,7 @@
         const table = document.getElementById('board');
         const messageElement = document.getElementById('game-message');
         const resetButton = document.getElementById('reset-button');
+        const fireworksContainer = document.getElementById('fireworks-container');
 
         // Generate the game board
         function generateBoard() {
@@ -220,6 +260,7 @@
 
             if (isWinningMove(row, col, You)) {
                 messageElement.textContent = 'Congratulations, You Win!';
+                triggerFireworks();
                 endGame();
                 return;
             }
@@ -258,6 +299,21 @@
             return !board[0].includes('.');
         }
 
+        function triggerFireworks() {
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.classList.add('firework');
+                    firework.style.top = `${Math.random() * 100}%`;
+                    firework.style.left = `${Math.random() * 100}%`;
+                    firework.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    fireworksContainer.appendChild(firework);
+
+                    setTimeout(() => firework.remove(), 1500);
+                }, i * 100);
+            }
+        }
+
         function endGame() {
             resetButton.style.display = 'block';
             table.querySelectorAll('td').forEach(cell => cell.classList.remove('empty'));
@@ -268,12 +324,12 @@
             generateBoard();
             messageElement.textContent = 'Your turn!';
             resetButton.style.display = 'none';
+            fireworksContainer.innerHTML = '';
         });
 
         generateBoard();
         messageElement.textContent = 'Your turn!';
     </script>
-
 </body>
 
 </html>
