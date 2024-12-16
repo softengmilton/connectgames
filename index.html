@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four - Premium</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            margin: 0;
+            height: 100vh;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        td {
+            width: 60px;
+            height: 60px;
+            border: 2px solid white;
+            text-align: center;
+            vertical-align: middle;
+            background-color: #333;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        td::before {
+            content: '';
+            display: block;
+            padding-top: 100%;
+        }
+
+        td span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        td.empty:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        td span.player {
+            background: limegreen;
+            box-shadow: 0 0 10px limegreen;
+        }
+
+        td span.ai {
+            background: red;
+            box-shadow: 0 0 10px red;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background: #007bff;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Connect Four</h1>
+    <p id="game-message"></p>
+    <table id="board"></table>
+    <button id="reset-button" style="display:none;">Play Again</button>
+
+    <script>
+        const Rows = 6;
+        const Cols = 7;
+        const WinSz = 4;
+        const You = 'O';
+        const AI = 'X';
+        let board = Array.from({ length: Rows }, () => Array(Cols).fill('.'));
+        let isPlayerTurn = true;
+        const table = document.getElementById('board');
+        const messageElement = document.getElementById('game-message');
+        const resetButton = document.getElementById('reset-button');
+
+        // Generate the game board
+        function generateBoard() {
+            table.innerHTML = '';
+            for (let r = 0; r < Rows; r++) {
+                const row = document.createElement('tr');
+                for (let c = 0; c < Cols; c++) {
+                    const cell = document.createElement('td');
+                    cell.classList.add('empty');
+                    cell.addEventListener('click', () => playerMove(c));
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+        }
+
+        function updateCell(r, c) {
+            const cell = table.rows[r].cells[c];
+            const player = board[r][c];
+            if (player === You) {
+                cell.innerHTML = '<span class="player"></span>';
+            } else if (player === AI) {
+                cell.innerHTML = '<span class="ai"></span>';
+            } else {
+                cell.innerHTML = '';
+            }
+        }
+
+        function isValidMove(col) {
+            return col >= 0 && col < Cols && board[0][col] === '.';
+        }
+
+        function makeMove(col, player) {
+            for (let r = Rows - 1; r >= 0; r--) {
+                if (board[r][col] === '.') {
+                    board[r][col] = player;
+                    return r;
+                }
+            }
+            return -1;
+        }
+
+        function isWinningMove(row, col, player) {
+            const directions = [
+                [1, 0], [0, 1], [1, 1], [1, -1]
+            ];
+
+            const isValid = (r, c) => r >= 0 && r < Rows && c >= 0 && c < Cols && board[r][c] === player;
+
+            for (const [dr, dc] of directions) {
+                let count = 1;
+
+                for (let i = 1; i < WinSz; i++) {
+                    if (isValid(row + dr * i, col + dc * i)) count++;
+                    else break;
+                }
+
+                for (let i = 1; i < WinSz; i++) {
+                    if (isValid(row - dr * i, col - dc * i)) count++;
+                    else break;
+                }
+
+                if (count >= WinSz) return true;
+            }
+
+            return false;
+        }
+
+        function findBestMove() {
+            for (let c = 0; c < Cols; c++) {
+                if (isValidMove(c)) {
+                    const row = makeMove(c, AI);
+                    if (isWinningMove(row, c, AI)) {
+                        board[row][c] = '.';
+                        return c;
+                    }
+                    board[row][c] = '.';
+                }
+            }
+
+            for (let c = 0; c < Cols; c++) {
+                if (isValidMove(c)) {
+                    const row = makeMove(c, You);
+                    if (isWinningMove(row, c, You)) {
+                        board[row][c] = '.';
+                        return c;
+                    }
+                    board[row][c] = '.';
+                }
+            }
+
+            return Math.floor(Cols / 2);
+        }
+
+        function playerMove(col) {
+            if (!isValidMove(col)) return;
+
+            const row = makeMove(col, You);
+            updateCell(row, col);
+
+            if (isWinningMove(row, col, You)) {
+                messageElement.textContent = 'Congratulations, You Win!';
+                endGame();
+                return;
+            }
+
+            if (isBoardFull()) {
+                messageElement.textContent = "It's a draw!";
+                endGame();
+                return;
+            }
+
+            isPlayerTurn = false;
+            setTimeout(aiMove, 500);
+        }
+
+        function aiMove() {
+            const col = findBestMove();
+            const row = makeMove(col, AI);
+            updateCell(row, col);
+
+            if (isWinningMove(row, col, AI)) {
+                messageElement.textContent = 'AI Wins! Better luck next time.';
+                endGame();
+                return;
+            }
+
+            if (isBoardFull()) {
+                messageElement.textContent = "It's a draw!";
+                endGame();
+                return;
+            }
+
+            isPlayerTurn = true;
+        }
+
+        function isBoardFull() {
+            return !board[0].includes('.');
+        }
+
+        function endGame() {
+            resetButton.style.display = 'block';
+            table.querySelectorAll('td').forEach(cell => cell.classList.remove('empty'));
+        }
+
+        resetButton.addEventListener('click', () => {
+            board = Array.from({ length: Rows }, () => Array(Cols).fill('.'));
+            generateBoard();
+            messageElement.textContent = 'Your turn!';
+            resetButton.style.display = 'none';
+        });
+
+        generateBoard();
+        messageElement.textContent = 'Your turn!';
+    </script>
+
+</body>
+
+</html>
