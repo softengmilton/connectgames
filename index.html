@@ -252,51 +252,48 @@
             return Math.floor(Cols / 2);
         }
 
-    function playerMove(col) {
-        if (!isPlayerTurn || !isValidMove(col)) return;
-        isPlayerTurn = false; 
-        const row = makeMove(col, You);
-        updateCell(row, col);
+        function playerMove(col) {
+            if (!isValidMove(col)) return;
 
-        if (isWinningMove(row, col, You)) {
-            messageElement.textContent = 'Congratulations, You Win!';
-            triggerFireworks();
-            endGame();
-            return;
+            const row = makeMove(col, You);
+            updateCell(row, col);
+
+            if (isWinningMove(row, col, You)) {
+                messageElement.textContent = 'Congratulations, You Win!';
+                triggerFireworks();
+                endGame();
+                return;
+            }
+
+            if (isBoardFull()) {
+                messageElement.textContent = "It's a draw!";
+                endGame();
+                return;
+            }
+
+            isPlayerTurn = false;
+            setTimeout(aiMove, 500);
         }
 
-        if (isBoardFull()) {
-            messageElement.textContent = "It's a draw!";
-            endGame();
-            return;
+        function aiMove() {
+            const col = findBestMove();
+            const row = makeMove(col, AI);
+            updateCell(row, col);
+
+            if (isWinningMove(row, col, AI)) {
+                messageElement.textContent = 'AI Wins! Better luck next time.';
+                endGame();
+                return;
+            }
+
+            if (isBoardFull()) {
+                messageElement.textContent = "It's a draw!";
+                endGame();
+                return;
+            }
+
+            isPlayerTurn = true;
         }
-
-        setTimeout(() => {
-            aiMove();
-        }, 500); // Allow AI to make its move after a delay
-    }
-
-
-    function aiMove() {
-        const col = findBestMove();
-        const row = makeMove(col, AI);
-        updateCell(row, col);
-
-        if (isWinningMove(row, col, AI)) {
-            messageElement.textContent = 'AI Wins! Better luck next time.';
-            endGame();
-            return;
-        }
-
-        if (isBoardFull()) {
-            messageElement.textContent = "It's a draw!";
-            endGame();
-            return;
-        }
-
-        isPlayerTurn = true; 
-    }
-
 
         function isBoardFull() {
             return !board[0].includes('.');
